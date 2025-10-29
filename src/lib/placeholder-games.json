@@ -1,0 +1,191 @@
+
+[
+    {
+        "title": "Pythonic Python",
+        "slug": "pythonic-python",
+        "description": "An epic journey through the world of Python, from basic variables to advanced functions and logic.",
+        "thumbnail_url": "https://picsum.photos/seed/python-epic/600/400",
+        "is_free": true,
+        "language": "Python",
+        "chapters": [
+            {
+                "order": 1,
+                "title": "Chapter 1: The Basics",
+                "levels": [
+                    {
+                        "title": "Variable Declaration",
+                        "objective": "Declare a variable 'message' and assign it the string 'Hello, Python!'. Then print the variable.",
+                        "starter_code": "# Your code here",
+                        "expected_output": "message = 'Hello, Python!'\nprint(message)",
+                        "intro_text": "Welcome, recruit! Your first mission is to store a message. Create a variable and give it a value, then print it to see your output.",
+                        "correct_feedback": "Excellent! The variable is stored and printed.",
+                        "incorrect_feedback": "Not quite. Remember, to create a variable, you need a name, an equals sign, and a value. Then use `print()`.",
+                        "reward_xp": 100
+                    },
+                    {
+                        "title": "Numeric Operations",
+                        "objective": "Create a variable 'a' with value 10, 'b' with value 5, and print their sum.",
+                        "starter_code": "a = 10\nb = 5\n# Your code here",
+                        "expected_output": "a = 10\nb = 5\nprint(a + b)",
+                        "intro_text": "Time for some math. Let's add two numbers together and print the result.",
+                        "correct_feedback": "Calculation complete! You're a natural with numbers.",
+                        "incorrect_feedback": "Check your math. The `+` operator is used for addition. Make sure to print the result.",
+                        "reward_xp": 150
+                    },
+                    {
+                        "title": "String Concatenation",
+                        "objective": "Create 'first_name' and 'last_name' variables and print them together with a space in between.",
+                        "starter_code": "first_name = 'John'\nlast_name = 'Doe'\n# Your code here",
+                        "expected_output": "first_name = 'John'\nlast_name = 'Doe'\nprint(first_name + ' ' + last_name)",
+                        "intro_text": "Let's combine text. This is called concatenation. Join the first and last names.",
+                        "correct_feedback": "Name assembly successful!",
+                        "incorrect_feedback": "Don't forget to add a space between the names for readability! `print(first + ' ' + last)`",
+                        "reward_xp": 150
+                    },
+                    {
+                        "title": "Working with Lists",
+                        "objective": "Create a list named 'fruits' with 'apple', 'banana', and 'cherry'. Then, print the second item in the list.",
+                        "starter_code": "# Your code here",
+                        "expected_output": "fruits = ['apple', 'banana', 'cherry']\nprint(fruits[1])",
+                        "intro_text": "Lists help you store multiple items. Create a list of fruits and access one of them.",
+                        "correct_feedback": "Fantastic! You've picked a great fruit.",
+                        "incorrect_feedback": "Remember, list items are indexed starting from 0. So the second item is at index 1.",
+                        "reward_xp": 200
+                    },
+                    {
+                        "title": "Simple For Loop",
+                        "objective": "You have a list of numbers. Write a for loop to print each number.",
+                        "starter_code": "numbers = [1, 2, 3]\n# Your code here",
+                        "expected_output": "numbers = [1, 2, 3]\nfor num in numbers:\n  print(num)",
+                        "intro_text": "Let's iterate! Use a `for` loop to go through each item in the list and print it.",
+                        "correct_feedback": "Loop sequence executed perfectly.",
+                        "incorrect_feedback": "The syntax is `for item in list:`. Don't forget the colon and indentation.",
+                        "reward_xp": 200
+                    }
+                ]
+            },
+            {
+                "order": 2,
+                "title": "Chapter 2: Logic and Functions",
+                "levels": [
+                    {
+                        "title": "Simple Function",
+                        "objective": "Define a function 'say_hello' that prints 'Hello, World!'.",
+                        "starter_code": "# Your code here\n\nsay_hello()",
+                        "expected_output": "def say_hello():\n  print('Hello, World!')\n\nsay_hello()",
+                        "intro_text": "Functions are reusable blocks of code. Let's create a simple one to say hello.",
+                        "correct_feedback": "Function defined and called. Outstanding!",
+                        "incorrect_feedback": "Remember the syntax: `def function_name():` followed by an indented block of code.",
+                        "reward_xp": 250
+                    },
+                    {
+                        "title": "Function with Parameter",
+                        "objective": "Create a function 'greet' that takes a 'name' and prints 'Hello, ' followed by the name.",
+                        "starter_code": "# Your code here\n\ngreet('Alice')",
+                        "expected_output": "def greet(name):\n  print('Hello, ' + name)\n\ngreet('Alice')",
+                        "intro_text": "Let's make our functions more flexible. Add a parameter to accept input.",
+                        "correct_feedback": "Dynamic greeting initiated. Well done!",
+                        "incorrect_feedback": "Define the function with a parameter inside the parentheses: `def greet(name):`.",
+                        "reward_xp": 250
+                    },
+                    {
+                        "title": "Function with Return",
+                        "objective": "Create a function 'add' that takes two numbers and returns their sum. Print the result of calling it with 5 and 3.",
+                        "starter_code": "def add(a, b):\n  # Your code here\n\nresult = add(5, 3)\nprint(result)",
+                        "expected_output": "def add(a, b):\n  return a + b\n\nresult = add(5, 3)\nprint(result)",
+                        "intro_text": "Functions can also give back values. Use the `return` keyword to send a result back.",
+                        "correct_feedback": "Value returned successfully. Mission accomplished!",
+                        "incorrect_feedback": "Use the `return` keyword to output a value from a function. The code that calls the function will receive this value.",
+                        "reward_xp": 300
+                    },
+                    {
+                        "title": "If-Else Statement",
+                        "objective": "Write an if-else statement to print 'Even' or 'Odd' based on a number.",
+                        "starter_code": "number = 7\n# Your code here, use the % operator",
+                        "expected_output": "number = 7\nif number % 2 == 0:\n  print('Even')\nelse:\n  print('Odd')",
+                        "intro_text": "Let's handle both outcomes. An `if-else` statement is perfect for this.",
+                        "correct_feedback": "Excellent branching logic!",
+                        "incorrect_feedback": "Use the modulo operator (`%`) to check for remainders. `number % 2 == 0` checks if a number is even.",
+                        "reward_xp": 250
+                    },
+                    {
+                        "title": "Loop with Condition",
+                        "objective": "Given a list of numbers, loop through them and only print the ones greater than 10.",
+                        "starter_code": "data = [5, 12, 3, 15, 9]\n# Your code here",
+                        "expected_output": "data = [5, 12, 3, 15, 9]\nfor x in data:\n  if x > 10:\n    print(x)",
+                        "intro_text": "Combine loops and conditions. Iterate through the list and use an `if` statement inside the loop.",
+                        "correct_feedback": "Conditional looping mastered! You filtered the data perfectly.",
+                        "incorrect_feedback": "Inside your `for` loop, you need an `if` statement to check if the number is greater than 10.",
+                        "reward_xp": 350
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "title": "JavaScript Journey",
+        "slug": "javascript-journey",
+        "description": "Embark on a journey to master JavaScript, the language of the web. From variables to DOM manipulation.",
+        "thumbnail_url": "https://picsum.photos/seed/js-journey/600/400",
+        "is_free": true,
+        "language": "JavaScript",
+        "chapters": [
+            {
+                "order": 1,
+                "title": "Chapter 1: The First Quest",
+                "levels": [
+                    {
+                        "title": "Declare with let",
+                        "objective": "Declare a variable 'score' using 'let' and assign it the value 100. Then log it to the console.",
+                        "starter_code": "// Your code here",
+                        "expected_output": "let score = 100;\nconsole.log(score);",
+                        "intro_text": "Let's begin your JavaScript quest. Your first task is to declare a mutable variable and log its value.",
+                        "correct_feedback": "Variable declared! You're on your way.",
+                        "incorrect_feedback": "In modern JavaScript, we use `let` to declare variables that can change. Don't forget the semicolon!",
+                        "reward_xp": 100
+                    },
+                    {
+                        "title": "Declare with const",
+                        "objective": "Declare a constant 'playerName' and assign it your name as a string.",
+                        "starter_code": "// Your code here",
+                        "expected_output": "const playerName = 'Alex';",
+                        "intro_text": "Some things should not change. Use `const` to declare a variable that cannot be reassigned.",
+                        "correct_feedback": "Constant secured! Your player name is set in stone.",
+                        "incorrect_feedback": "Use `const` for variables that won't be reassigned. `const variableName = value;`",
+                        "reward_xp": 100
+                    },
+                    {
+                        "title": "Arrow Function Basics",
+                        "objective": "Write an arrow function 'startQuest' that logs 'Quest Started!' to the console.",
+                        "starter_code": "// Your code here\n\nstartQuest();",
+                        "expected_output": "const startQuest = () => {\n  console.log('Quest Started!');\n};\n\nstartQuest();",
+                        "intro_text": "There's a modern way to write functions. Let's try the arrow function syntax.",
+                        "correct_feedback": "Modern syntax mastered! Arrow function is a go.",
+                        "incorrect_feedback": "Arrow function syntax looks like this: `const functionName = () => { ... };`",
+                        "reward_xp": 250
+                    },
+                    {
+                        "title": "Arrays and Access",
+                        "objective": "Create an array 'inventory' with items 'sword', 'shield', 'potion'. Log the first item to the console.",
+                        "starter_code": "// Your code here",
+                        "expected_output": "const inventory = ['sword', 'shield', 'potion'];\nconsole.log(inventory[0]);",
+                        "intro_text": "An adventurer needs an inventory. Let's create one using an array.",
+                        "correct_feedback": "Inventory check complete. You've equipped your first item!",
+                        "incorrect_feedback": "Arrays are created with square brackets `[]`. Remember that array indexing starts at 0.",
+                        "reward_xp": 200
+                    },
+                    {
+                        "title": "Alert the User",
+                        "objective": "Use the 'alert' function to show a popup with the message 'Welcome to the Journey!'.",
+                        "starter_code": "// Your code here",
+                        "expected_output": "alert('Welcome to the Journey!');",
+                        "intro_text": "Let's communicate directly with the user. The `alert` function creates a browser popup.",
+                        "correct_feedback": "Message delivered! The user has been alerted.",
+                        "incorrect_feedback": "Simply call the `alert()` function with the message you want to display in quotes as its argument.",
+                        "reward_xp": 150
+                    }
+                ]
+            }
+        ]
+    }
+]
