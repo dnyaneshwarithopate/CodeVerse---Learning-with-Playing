@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217.2 91.2% 59.8%;
+    --radius: 0.75rem;
+
+    /* New Game UI Theme Variables */
+    --game-bg: 30 54% 25%; /* Dark wood color */
+    --game-surface: 30 52% 35%; /* Lighter wood panel */
+    --game-border: 35 65% 45%; /* Wood border color */
+    --game-accent: 40 90% 55%; /* Gold/Amber accent */
+    --game-accent-glow: 40 90% 65%;
+    --game-text: 35 33% 95%; /* Light text color */
+
+    --chart-1: 210 40% 96.1%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  body::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+
+  /* For webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer components {
+  /* New Game UI Button Style */
+  .btn-game {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-bold ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    background-color: hsl(var(--game-surface));
+    border: 2px solid hsl(var(--game-border));
+    color: hsl(var(--game-text));
+    text-shadow: 1px 1px 2px hsl(var(--game-bg) / 0.5);
+    box-shadow: 0 4px 0 hsl(var(--game-bg)), 0 6px 12px hsla(0, 0%, 0%, 0.4), inset 0 1px 1px hsl(var(--game-border));
+    padding: 0.75rem 1.5rem;
+    transform: translateY(-2px);
+  }
+  .btn-game:hover {
+    transform: translateY(-4px);
+    filter: brightness(1.1);
+    box-shadow: 0 6px 0 hsl(var(--game-bg)), 0 8px 16px hsla(0, 0%, 0%, 0.4), inset 0 1px 1px hsl(var(--game-border));
+  }
+  .btn-game:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 0 hsl(var(--game-bg)), 0 2px 4px hsla(0, 0%, 0%, 0.3), inset 0 1px 1px hsl(var(--game-border));
+  }
+
+  .tabs-game {
+    @apply inline-flex h-auto items-center justify-center rounded-md p-1;
+    background-color: hsl(var(--game-bg));
+    border: 2px solid hsl(var(--game-border));
+  }
+  .tab-trigger-game {
+     @apply inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+     color: hsl(var(--game-text) / 0.7);
+  }
+   .tab-trigger-game[data-state=active] {
+      @apply btn-game !py-1.5;
+   }
+
+}
