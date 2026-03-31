@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -16,9 +17,12 @@ export default {
       },
     },
     extend: {
+      gridTemplateColumns: {
+        '25': 'repeat(25, minmax(0, 1fr))',
+      },
       fontFamily: {
         body: ['Poppins', 'sans-serif'],
-        headline: ['Poppins', 'sans-serif'],
+        headline: ['Space Grotesk', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -55,6 +59,18 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        'code-keyword': 'hsl(var(--code-keyword))',
+        'code-function': 'hsl(var(--code-function))',
+        'code-string': 'hsl(var(--code-string))',
+        'code-number': 'hsl(var(--code-number))',
+        'code-comment': 'hsl(var(--code-comment))',
+        'code-punctuation': 'hsl(var(--code-punctuation))',
+        'hp-background': 'hsl(var(--hp-background))',
+        'hp-background-deep': 'hsl(var(--hp-background-deep))',
+        'hp-grid': 'hsl(var(--hp-grid))',
+        'hp-accent': 'hsl(var(--hp-accent))',
+        'hp-text': 'hsl(var(--hp-text))',
+        'hp-text-muted': 'hsl(var(--hp-text-muted))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
@@ -111,7 +127,7 @@ export default {
         },
         'grid-pan': {
           '0%': { backgroundPosition: '0% 0%' },
-          '100%': { backgroundPosition: '2rem 2rem' },
+          '100%': { backgroundPosition: '3rem 3rem' },
         },
         'gradient-x': {
             '0%, 100%': { 'background-position': '0% 50%' },
@@ -121,6 +137,17 @@ export default {
           '0%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.5)', opacity: '0.5' },
           '100%': { transform: 'scale(2)', opacity: '0' },
+        },
+         'drop-and-fade': {
+          '0%': { transform: 'translateY(-100%) scale(0.5)', opacity: '0' },
+          '10%': { opacity: '1' },
+          '90%': { opacity: '1' },
+          '100%': { transform: 'translateY(100vh) scale(1.5)', opacity: '0' },
+        },
+        'fall': {
+          to: {
+            transform: 'translateY(100vh)',
+          }
         }
       },
       animation: {
@@ -131,6 +158,8 @@ export default {
         'grid-pan': 'grid-pan 15s linear infinite',
         'gradient-x': 'gradient-x 3s ease-in-out infinite',
         'burst': 'burst 0.3s ease-out forwards',
+        'drop-and-fade': 'drop-and-fade var(--duration) var(--delay) infinite linear',
+        'fall': 'fall var(--duration) var(--delay) linear infinite',
       },
     },
   },

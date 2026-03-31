@@ -59,10 +59,17 @@ export type GameLevel = Database['public']['Tables']['game_levels']['Row'] & {
     incorrect_feedback?: string | null;
 };
 export type Chat = Database['public']['Tables']['chats']['Row'];
-export type ChatMessage = Database['public']['Tables']['chat_messages']['Row'];
+export type ChatMessage = Omit<Database['public']['Tables']['chat_messages']['Row'], 'content'> & {
+    content: string;
+};
 export type UserTopicProgress = Database['public']['Tables']['user_topic_progress']['Row'];
 export type UserQuizAttempt = Database['public']['Tables']['user_quiz_attempts']['Row'];
 export type UserNote = Database['public']['Tables']['user_notes']['Row'];
+
+// This was added for the wishlist feature
+export type UserWishlist = Database['public']['Tables']['user_wishlist']['Row'] & {
+  courses: Course;
+};
 
 
 // The type from the DB has a different column name
@@ -70,6 +77,8 @@ export type UserGameProgress = Database['public']['Tables']['user_game_progress'
 
 export type GameSettings = Database['public']['Tables']['game_settings']['Row'];
 export type WebsiteSettings = Database['public']['Tables']['website_settings']['Row'];
+
+export type ChatAnalysis = Database['public']['Tables']['chat_analysis']['Row'];
 
 
 // Custom combined types for nested data fetching

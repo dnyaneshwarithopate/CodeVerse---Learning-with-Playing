@@ -3,7 +3,7 @@
 'use server';
 
 import { createClient } from "@/lib/supabase/server";
-import type { CourseWithChaptersAndTopics, Topic, UserEnrollment, QuizWithQuestions, GameWithChaptersAndLevels, GameLevel, UserGameProgress, GameSettings, GameChapter, WebsiteSettings, Chat, UserProfile, ChatMessage, UserNote } from "../types";
+import type { CourseWithChaptersAndTopics, Topic, UserEnrollment, QuizWithQuestions, GameWithChaptersAndLevels, GameLevel, UserGameProgress, GameSettings, GameChapter, WebsiteSettings, Chat, UserProfile, ChatMessage, UserNote, UserWishlist } from "../types";
 
 // This function can be used in Server Components or Server Actions.
 // It should not be used in Client Components.
@@ -31,6 +31,15 @@ export async function getCoursesWithChaptersAndTopics(): Promise<CourseWithChapt
             *,
             course_reviews(count),
             user_enrollments(count),
+            games (*),
+            related_courses!course_id(
+                related_course_id,
+                courses!related_course_id (
+                  id,
+                  name,
+                  slug
+                )
+            ),
             chapters (
                 *,
                 topics (
@@ -55,10 +64,18 @@ export async function getCoursesWithChaptersAndTopics(): Promise<CourseWithChapt
         console.error("Error fetching courses:", error.message);
         return null;
     }
+
+    // Transform the data to match the expected nested structure
+    const transformedCourses = courses.map(course => {
+        const gameData = Array.isArray(course.games) ? course.games[0] : course.games;
+        return {
+            ...course,
+            related_courses: course.related_courses?.map((rc: any) => rc.courses) || [],
+            games: gameData || null
+        };
+    });
     
-    // The type from Supabase might be slightly different, so we cast it.
-    // This is safe as long as the query matches the desired structure.
-    return courses as unknown as CourseWithChaptersAndTopics[];
+    return transformedCourses as unknown as CourseWithChaptersAndTopics[];
 }
 
 export async function getCourseBySlug(slug: string): Promise<CourseWithChaptersAndTopics | null> {
@@ -137,6 +154,7 @@ export async function getCourseAndTopicDetails(courseSlug: string, topicSlug: st
             name,
             slug,
             language,
+            notes_url,
             chapters (
                 id,
                 title,
@@ -201,7 +219,7 @@ export async function getCourseAndTopicDetails(courseSlug: string, topicSlug: st
 }
 
 
-export async function getUserEnrollments(userId: string): Promise<{ enrolledCourses: CourseWithChaptersAndTopics[], enrollments: UserEnrollment[] } | null> {
+export async function getUserEnrollments(userId: string): Promise<{ enrolledCourses: CourseWithChaptersAndTopics[], enrollments: UserEnrollment[], progress: { topic_id: string }[] } | null> {
     const supabase = createClient();
     const { data: enrollments, error } = await supabase
         .from('user_enrollments')
@@ -210,12 +228,22 @@ export async function getUserEnrollments(userId: string): Promise<{ enrolledCour
             courses (
                 *,
                 chapters (
-                    *,
-                    topics (*)
+                    id,
+                    order,
+                    title,
+                    topics (
+                        id,
+                        order,
+                        title,
+                        slug
+                    )
                 )
             )
         `)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('order', { foreignTable: 'courses.chapters', ascending: true })
+        .order('order', { foreignTable: 'courses.chapters.topics', ascending: true });
+
 
     if (error) {
         console.error("Error fetching user enrollments:", error.message);
@@ -223,8 +251,16 @@ export async function getUserEnrollments(userId: string): Promise<{ enrolledCour
     }
 
     const enrolledCourses = enrollments.map(e => e.courses) as unknown as CourseWithChaptersAndTopics[];
+    
+    const courseIds = enrolledCourses.map(c => c.id);
 
-    return { enrolledCourses, enrollments: enrollments as UserEnrollment[] };
+    const { data: progress } = await supabase
+        .from('user_topic_progress')
+        .select('topic_id')
+        .eq('user_id', userId)
+        .in('course_id', courseIds);
+
+    return { enrolledCourses, enrollments: enrollments as UserEnrollment[], progress: progress || [] };
 }
 
 
@@ -439,6 +475,9 @@ export async function getUserChats(): Promise<Chat[] | null> {
 }
 
 export async function getChat(chatId: string): Promise<{ chat: Chat | null, messages: ChatMessage[] | null }> {
+    if (!chatId || chatId.startsWith('temp-')) {
+        return { chat: null, messages: [] };
+    }
     const supabase = createClient();
      const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { chat: null, messages: null };
@@ -449,13 +488,13 @@ export async function getChat(chatId: string): Promise<{ chat: Chat | null, mess
         return { chat: null, messages: null };
     }
 
-    const { data: messages, error: messagesError } = await supabase.from('chat_messages').select('*').eq('chat_id', chatId).order('created_at', { ascending: true });
+    const { data: messages, error: messagesError } = await supabase.from('chat_messages').select('id, chat_id, created_at, role, content').eq('chat_id', chatId).order('created_at', { ascending: true });
      if (messagesError) {
         console.error("Error fetching messages:", messagesError);
         return { chat, messages: null };
     }
 
-    return { chat, messages };
+    return { chat, messages: messages as ChatMessage[] };
 }
 
 export async function getUserNoteForTopic(topicId: string): Promise<UserNote | null> {
@@ -480,26 +519,22 @@ export async function getUserNoteForTopic(topicId: string): Promise<UserNote | n
 export async function getInProgressGames(userId: string): Promise<GameWithChaptersAndLevels[]> {
     const supabase = createClient();
     
-    // Get unique game_ids the user has made progress in, ordered by most recent
     const { data: progressData, error: progressError } = await supabase
         .from('user_game_progress')
-        .select('game_id, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
+        .select('game_id')
+        .eq('user_id', userId);
 
     if (progressError) {
         console.error("Error fetching in-progress games:", progressError.message);
         return [];
     }
-
+    
     if (!progressData || progressData.length === 0) {
         return [];
     }
 
-    // Get unique game IDs, maintaining the order of most recently played
-    const uniqueGameIds = [...new Map(progressData.map(item => [item.game_id, item])).values()].map(item => item.game_id);
+    const uniqueGameIds = [...new Set(progressData.map(p => p.game_id))];
 
-    // Fetch the full details for those games
     const { data: gamesData, error: gamesError } = await supabase
         .from('games')
         .select(`
@@ -520,10 +555,7 @@ export async function getInProgressGames(userId: string): Promise<GameWithChapte
         return [];
     }
 
-    // Sort the final gamesData array based on the order from uniqueGameIds
-    const sortedGames = uniqueGameIds.map(id => gamesData.find(game => game.id === id)).filter(Boolean) as GameWithChaptersAndLevels[];
-
-    return sortedGames;
+    return gamesData as GameWithChaptersAndLevels[];
 }
 
 
@@ -548,6 +580,54 @@ export async function getUsersWithChatCount(): Promise<(UserProfile & { chat_cou
         ...profile,
         chat_count: profile.chats.length
     }));
+}
+
+export async function getUsersWithProgress() {
+    const supabase = createClient();
+    
+    // 1. Fetch all profiles
+    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('*');
+    if (profilesError) {
+        console.error("Error fetching profiles for leaderboard:", profilesError);
+        return [];
+    }
+
+    // 2. Fetch all game progress records with their corresponding level XP
+    const { data: progressRecords, error: progressError } = await supabase
+        .from('user_game_progress')
+        .select('user_id, game_levels(reward_xp)');
+    
+    if (progressError) {
+        console.error("Error fetching user game progress for leaderboard:", progressError);
+        return [];
+    }
+
+    // 3. Calculate total XP and completed levels for each user
+    const userStats: { [userId: string]: { total_xp: number, completed_levels: number } } = {};
+    
+    for (const record of progressRecords) {
+        const userId = record.user_id;
+        const xp = record.game_levels?.reward_xp || 0;
+
+        if (!userStats[userId]) {
+            userStats[userId] = { total_xp: 0, completed_levels: 0 };
+        }
+        
+        userStats[userId].total_xp += xp;
+        userStats[userId].completed_levels += 1;
+    }
+
+    // 4. Merge profile data with calculated stats
+    const usersWithProgress = profiles.map(profile => {
+        const stats = userStats[profile.id] || { total_xp: 0, completed_levels: 0 };
+        return {
+            ...profile,
+            xp: stats.total_xp, // Override the potentially stale profile.xp with the fresh calculation
+            completed_levels: stats.completed_levels,
+        };
+    });
+
+    return usersWithProgress;
 }
 
 
@@ -600,4 +680,34 @@ export async function getChatForAdmin(chatId: string) {
     return { chat: data };
 }
 
-    
+export async function getUserWishlist(): Promise<UserWishlist[] | null> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+        return [];
+    }
+
+    const { data, error } = await supabase
+        .from('user_wishlist')
+        .select(`
+            *,
+            courses (
+                *,
+                chapters (
+                    *,
+                    topics (*)
+                ),
+                course_reviews(count),
+                user_enrollments(count)
+            )
+        `)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error("Error fetching wishlist:", error);
+        return null;
+    }
+
+    return data as UserWishlist[];
+}

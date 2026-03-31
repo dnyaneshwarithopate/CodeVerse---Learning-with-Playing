@@ -93,11 +93,22 @@ export default function CodePracticePage() {
 
             const { course, topic: fetchedTopic, nextTopic: fetchedNextTopic } = await getCourseAndTopicDetails(params.languageSlug as string, params.topicSlug as string);
             if (course && fetchedTopic) {
+                if (!fetchedTopic.content) {
+                    // If there's no practice content, skip to the next step
+                    const nextUrl = fetchedNextTopic ? `/courses/${course.slug}/${fetchedNextTopic.slug}` : `/courses/${course.slug}`;
+                    const formData = new FormData();
+                    formData.append('topicId', fetchedTopic.id);
+                    formData.append('courseId', course.id);
+                    formData.append('nextUrl', nextUrl);
+                    await completeTopicAction(formData);
+                    // Server action will handle the redirect
+                    return;
+                }
+                
                 setCourse(course);
                 setTopic(fetchedTopic as TopicWithContent);
                 setNextTopic(fetchedNextTopic);
 
-                // Extract starter code from the content
                 const starterCodeMatch = fetchedTopic.content?.match(/### Starter Code\s*```(?:\w+)\n([\s\S]*?)```/);
                 if (starterCodeMatch && starterCodeMatch[1]) {
                     setUserCode(starterCodeMatch[1].trim());
@@ -117,11 +128,9 @@ export default function CodePracticePage() {
         setFeedback('');
         setHint('');
         try {
-            // Extract solution from the content markdown
             const solutionMatch = topic.content?.match(/### Solution\s*```(?:\w+)\n([\s\S]*?)```/);
             const solution = solutionMatch ? solutionMatch[1].trim() : '';
             
-            // Simple string comparison for correctness.
             const userCodeCleaned = userCode.replace(/\s+/g, ' ').trim();
             const solutionCleaned = solution.replace(/\s+/g, ' ').trim();
             
@@ -171,10 +180,9 @@ export default function CodePracticePage() {
         return <div className="flex items-center justify-center h-screen">Loading Code Practice...</div>;
     }
 
-    if (!topic || !topic.content || !course) {
-        // Redirect to quiz if practice content is missing
-        router.push(`/courses/${params.languageSlug}/${params.topicSlug}/quiz`);
-        return null;
+    if (!topic || !course) {
+        // This case should be handled by the redirect logic in useEffect
+        return <div className="flex items-center justify-center h-screen">Redirecting...</div>;
     }
 
     return (
@@ -203,7 +211,7 @@ export default function CodePracticePage() {
                 <ResizablePanelGroup direction="horizontal" className="flex-grow">
                     <ResizablePanel defaultSize={50}>
                         <ScrollArea className="h-full p-6">
-                            <MarkdownRenderer content={topic.content} showSolution={showSolution} topic={topic} />
+                            <MarkdownRenderer content={topic.content || ''} showSolution={showSolution} topic={topic} />
                         </ScrollArea>
                     </ResizablePanel>
                     <ResizableHandle withHandle />

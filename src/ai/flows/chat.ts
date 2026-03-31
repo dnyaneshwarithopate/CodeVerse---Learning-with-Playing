@@ -9,45 +9,77 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-
-const MessagePartSchema = z.object({
-  text: z.string().optional(),
-  media: z
-    .object({
-      contentType: z.string(),
-      url: z.string(),
-    })
-    .optional(),
-});
+import { createClient } from '@/lib/supabase/server';
 
 const ChatInputSchema = z.object({
   messages: z.array(
     z.object({
       role: z.enum(['user', 'model']),
-      content: z.array(MessagePartSchema),
+      content: z.string(),
     })
   ),
+  chatId: z.string().optional(),
+  userName: z.string().optional(),
 });
 export type ChatInput = z.infer<typeof ChatInputSchema>;
 
 export async function chat(input: ChatInput): Promise<ReadableStream<Uint8Array>> {
-    const { stream, response } = await ai.generateStream({
+    
+    const history = input.messages.slice(0, -1);
+    const latestMessage = input.messages[input.messages.length - 1];
+
+    let systemPrompt = `You are a helpful and friendly AI assistant named Chatlify, part of the CodeVerse platform. Your purpose is to help users learn about programming and understand coding concepts.
+- If you know the user's name, greet them by name (e.g., "Hey ${input.userName || 'there'}!").
+- Always be encouraging and friendly.
+- If asked who you are, introduce yourself as "Chatlify by CodeVerse".
+- Use standard Markdown for formatting (e.g., **bold**, *italic*, lists, # H1, ## H2, ### H3).
+- For code blocks, you MUST wrap them with [-----] and [-----]. Do not use markdown fences (\`\`\`).
+Example:
+This is some text.
+[-----]
+function hello() {
+  console.log("Hello, World!");
+}
+[-----]
+This is more text.`;
+
+    // If a chatId is provided, try to get the long-term memory summary.
+    if (input.chatId) {
+        const supabase = createClient();
+        const { data: analysis } = await supabase
+            .from('chat_analysis')
+            .select('summary')
+            .eq('chat_id', input.chatId)
+            .single();
+
+        if (analysis?.summary) {
+            systemPrompt += `\n\n---
+Here is a summary of the conversation so far. Use it to maintain context about what has been discussed previously.
+${analysis.summary}
+---`;
+        }
+    }
+
+
+    const { stream } = await ai.generateStream({
       model: 'googleai/gemini-2.5-flash',
-      prompt: input.messages,
+      system: systemPrompt,
+      prompt: latestMessage.content,
+      history: history,
     });
 
+    const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
         async start(controller) {
             try {
                 for await (const chunk of stream) {
                     const text = chunk.text;
                     if (text) {
-                        controller.enqueue(new TextEncoder().encode(text));
+                        controller.enqueue(encoder.encode(text));
                     }
                 }
-                await response; // Wait for the full response to be processed
             } catch (e: any) {
-                console.error("Streaming Error:", e);
+                console.error("Streaming Error in chat flow:", e);
                 controller.error(e);
             } finally {
                 controller.close();

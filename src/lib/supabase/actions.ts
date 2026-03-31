@@ -4,9 +4,10 @@
 
 import { createClient } from './server';
 import { revalidatePath } from 'next/cache';
-import type { QuizWithQuestions, QuestionWithOptions, QuestionOption, Topic, Chapter, Course, Game, GameLevel, GameChapter, Chat, ChatMessage } from '@/lib/types';
+import type { QuizWithQuestions, QuestionWithOptions, QuestionOption, Topic, Chapter, Course, Game, GameLevel, GameChapter, Chat, ChatMessage, UserProfile, UserNote } from '@/lib/types';
 import placeholderGames from '@/lib/placeholder-games.json';
 import { redirect } from 'next/navigation';
+import { analyzeChatConversation } from '@/ai/flows/analyze-chat-conversation';
 
 interface TopicData extends Omit<Topic, 'id' | 'created_at' | 'chapter_id' | 'order' | 'explanation'> {
     id?: string; // id is present when updating
@@ -818,78 +819,109 @@ export async function deleteMultipleGames(gameIds: string[]) {
     return { success: true };
 }
 
-export async function completeGameLevel(levelId: string) {
+export async function completeGameLevel(levelId: string, gameId: string) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
-        return { success: false, error: "User not authenticated" };
+        console.error("User not authenticated for completeGameLevel");
+        return { success: false, error: 'User not authenticated' };
     }
     
-    const { data: levelData, error: levelError } = await supabase
-        .from('game_levels')
-        .select('game_chapters(game_id)')
-        .eq('id', levelId)
-        .single();
-    
-    if (levelError || !levelData || !levelData.game_chapters) {
-        console.error("Could not find the game for this level:", levelError?.message);
-        return { success: false, error: "Could not find the game for this level." };
-    }
-    const gameId = levelData.game_chapters.game_id;
-
-    const { error } = await supabase.from('user_game_progress').upsert({
+    const { error: progressError } = await supabase.from('user_game_progress').insert({
         user_id: user.id,
         game_id: gameId,
         completed_level_id: levelId,
         completed_at: new Date().toISOString(),
-    }, {
-        onConflict: 'user_id,completed_level_id'
     });
 
-    if (error) {
-        console.error("Error saving game progress:", error);
-        return { success: false, error: "Could not save progress." };
+    if (progressError && progressError.code !== '23505') { // Ignore if already completed
+        console.error("Error saving game progress:", progressError);
+        return { success: false, error: `Failed to save progress: ${progressError.message}` };
     }
 
     revalidatePath(`/playground/${gameId}`);
-
+    revalidatePath('/dashboard');
+    
     return { success: true };
 }
+
+export async function recalculateAllUserXp(): Promise<{ success: boolean, error?: string }> {
+    const supabase = createClient();
+    try {
+        // Fetch all levels to get their XP values
+        const { data: levels, error: levelsError } = await supabase.from('game_levels').select('id, reward_xp');
+        if (levelsError) throw new Error(`Failed to fetch levels: ${levelsError.message}`);
+        const levelXpMap = new Map(levels.map(l => [l.id, l.reward_xp]));
+
+        // Fetch all progress records
+        const { data: progress, error: progressError } = await supabase.from('user_game_progress').select('user_id, completed_level_id');
+        if (progressError) throw new Error(`Failed to fetch progress: ${progressError.message}`);
+
+        // Calculate total XP for each user
+        const userXpTotals = new Map<string, number>();
+        for (const p of progress) {
+            const xp = levelXpMap.get(p.completed_level_id) || 0;
+            userXpTotals.set(p.user_id, (userXpTotals.get(p.user_id) || 0) + xp);
+        }
+
+        // Prepare bulk update
+        const updates = Array.from(userXpTotals.entries()).map(([userId, totalXp]) => ({
+            id: userId,
+            xp: totalXp
+        }));
+
+        if (updates.length > 0) {
+            const { error: updateError } = await supabase.from('profiles').upsert(updates);
+            if (updateError) throw new Error(`Failed to update profiles: ${updateError.message}`);
+        }
+        
+        revalidatePath('/'); // For homepage leaderboard
+        revalidatePath('/admin/games/leaderboard');
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Error in recalculateAllUserXp:", e);
+        return { success: false, error: e.message };
+    }
+}
+
 
 export async function deleteChat(chatId: string) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'Not authenticated' };
 
-    // Verify user owns the chat or is an admin
-    const { data: chat, error: fetchError } = await supabase.from('chats').select('user_id').eq('id', chatId).single();
-    if (fetchError || !chat) return { success: false, error: 'Chat not found' };
-
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-
-    if (chat.user_id !== user.id && profile?.role !== 'admin') {
-        return { success: false, error: 'Not authorized' };
+    
+    let query;
+    if (profile?.role === 'admin') {
+        // Admin can delete any chat
+        query = supabase.from('chats').delete().eq('id', chatId);
+    } else {
+        // Regular user can only delete their own chat
+        query = supabase.from('chats').delete().eq('id', chatId).eq('user_id', user.id);
     }
-
-    const { error } = await supabase.from('chats').delete().eq('id', chatId);
+    
+    const { error } = await query;
     if (error) {
         console.error('Error deleting chat:', error);
         return { success: false, error: error.message };
     }
     
-    // This action is now optimistic on the client, so revalidation isn't strictly necessary for instant UI feedback
-    // but it is good practice for data consistency across sessions.
     revalidatePath('/chat', 'layout');
-    revalidatePath('/admin/users', 'layout');
+    revalidatePath('/admin/users', 'page');
+    revalidatePath('/admin/chats', 'page');
 
-    return { success: true };
+    return { success: true, error: null };
 }
 
 export async function createNewChat(title: string): Promise<Chat | null> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {
+        return null;
+    }
 
     const { data, error } = await supabase
         .from('chats')
@@ -909,27 +941,51 @@ export async function createNewChat(title: string): Promise<Chat | null> {
 export async function saveChat(chatId: string, messages: Partial<ChatMessage>[]) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "User not authenticated" };
     
-    // Verify user owns the chat
+    if (!user) {
+         return { success: false, error: "User not authenticated" };
+    }
+
     const { count, error: countError } = await supabase.from('chats').select('*', { count: 'exact', head: true }).eq('id', chatId).eq('user_id', user.id);
     if (countError || count === 0) {
         return { success: false, error: "User does not own chat or chat does not exist."};
     }
     
-    // Delete existing messages and insert new ones to ensure consistency
     await supabase.from('chat_messages').delete().eq('chat_id', chatId);
 
     const messagesToInsert = messages.map(msg => ({
         chat_id: chatId,
         role: msg.role!,
-        content: msg.content!
+        content: msg.content || ''
     }));
 
     const { error: insertError } = await supabase.from('chat_messages').insert(messagesToInsert);
      if(insertError) {
         console.error("Failed to save new messages", insertError);
         return { success: false, error: "Failed to save messages." };
+    }
+
+    // Generate and save conversation summary, even after the first message
+    if (messages.length >= 1) {
+        const transcript = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+        try {
+            // This is an async call but we don't wait for it to finish,
+            // allowing the UI to feel faster. It runs in the background.
+            analyzeChatConversation({ transcript }).then(analysis => {
+                if (analysis.summary) {
+                    supabase.from('chat_analysis').upsert({
+                        chat_id: chatId,
+                        summary: analysis.summary,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'chat_id' }).then(({ error }) => {
+                        if (error) console.error("Failed to update chat analysis in background:", error);
+                    });
+                }
+            });
+        } catch (e) {
+            // Log this error but don't fail the whole operation
+            console.error("Failed to trigger chat analysis generation:", e);
+        }
     }
     
     revalidatePath(`/chat/${chatId}`);
@@ -952,9 +1008,34 @@ export async function updateChat(chatId: string, updates: Partial<Chat>) {
     return { success: true, error: null };
 }
 
-    
 
-    
+export async function toggleWishlist(courseId: string, isWishlisted: boolean): Promise<{ success: boolean; error?: string }> {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-
+    if (!user) {
+        return { success: false, error: "You must be logged in to modify your wishlist." };
+    }
     
+    if (isWishlisted) {
+        // Remove from wishlist
+        const { error } = await supabase.from('user_wishlist').delete().match({ user_id: user.id, course_id: courseId });
+        if (error) {
+            console.error("Error removing from wishlist:", error);
+            return { success: false, error: error.message };
+        }
+    } else {
+        // Add to wishlist
+        const { error } = await supabase.from('user_wishlist').insert({ user_id: user.id, course_id: courseId });
+        if (error) {
+             console.error("Error adding to wishlist:", error);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    revalidatePath('/wishlist');
+    revalidatePath('/courses/explore');
+    revalidatePath('/');
+    
+    return { success: true };
+}

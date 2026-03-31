@@ -141,8 +141,46 @@ export default function QuizPage() {
     }
 
     if (!topic || !quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0 || !currentQuestion || !course) {
+        // If there's no quiz, immediately redirect to the next logical step.
+        const form = document.createElement('form');
+        form.action = '/complete-topic-action'; // A server action endpoint
+        form.method = 'POST';
+        form.style.display = 'none';
+
+        const topicIdInput = document.createElement('input');
+        topicIdInput.name = 'topicId';
+        topicIdInput.value = topic?.id || '';
+        form.appendChild(topicIdInput);
+
+        const courseIdInput = document.createElement('input');
+        courseIdInput.name = 'courseId';
+        courseIdInput.value = course?.id || '';
+        form.appendChild(courseIdInput);
+
+        const nextUrlInput = document.createElement('input');
+        nextUrlInput.name = 'nextUrl';
+        nextUrlInput.value = nextStepUrl;
+        form.appendChild(nextUrlInput);
+
+        document.body.appendChild(form);
+        
+        // This is a client-side redirect that happens after the form is submitted.
+        // The form submission itself handles the redirect on the server.
+        useEffect(() => {
+             // We use a dummy form submission to trigger the server action
+             // because we can't directly call it and then redirect from a client component's top level.
+            const completeAndRedirect = async () => {
+                if (topic && course) {
+                    await completeTopicAction(new FormData(form));
+                }
+                router.push(nextStepUrl);
+            }
+            completeAndRedirect();
+        }, []);
+
+
         return (
-            <div className="flex flex-col min-h-screen bg-background">
+             <div className="flex flex-col min-h-screen bg-background">
                 <Header />
                 <main className="flex-grow pt-24 pb-12 flex items-center justify-center">
                     <Card className="w-full max-w-2xl text-center">
@@ -150,24 +188,8 @@ export default function QuizPage() {
                             <CardTitle className="text-3xl">Quiz Not Available</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p>There is no quiz for this topic yet.</p>
+                            <p>There is no quiz for this topic. Redirecting you to the next step...</p>
                         </CardContent>
-                        <CardFooter className="flex-col gap-2">
-                             <form action={completeTopicAction} className="w-full">
-                                <input type="hidden" name="topicId" value={topic?.id || ''} />
-                                <input type="hidden" name="courseId" value={course?.id || ''} />
-                                <input type="hidden" name="nextUrl" value={nextStepUrl} />
-                                <Button type="submit" className="w-full">
-                                    {nextStepText} 
-                                    {hasPractice || nextTopic ? <ArrowRight className="ml-2"/> : <CheckCircle className="ml-2"/>}
-                                </Button>
-                            </form>
-                            <Button variant="ghost" asChild className="w-full">
-                                <Link href={`/courses/${params.languageSlug}/${params.topicSlug}`}>
-                                    <ArrowLeft className="mr-2"/> Back to Lesson
-                                </Link>
-                            </Button>
-                        </CardFooter>
                     </Card>
                 </main>
                 <Footer />

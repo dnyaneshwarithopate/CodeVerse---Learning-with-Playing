@@ -1,3 +1,4 @@
+
 "use client";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Moon, Sun, Bell, LogOut, User, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { UserProfile } from "@/lib/types";
 import { SidebarTrigger, useSidebar } from "./ui/sidebar";
+import Link from "next/link";
 
 export function AppHeader({
   profile,
@@ -87,7 +89,7 @@ export function AppHeader({
             >
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={profile?.avatar_url}
+                  src={profile?.avatar_url || ''}
                   alt={profile?.full_name || "User"}
                 />
                 <AvatarFallback>
@@ -102,13 +104,17 @@ export function AppHeader({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>{profile?.full_name || "User"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              Profile
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>

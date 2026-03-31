@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -88,7 +87,6 @@ export default function AdminChatViewPage() {
                 <div className="p-6 space-y-6 border rounded-lg bg-muted/20">
                     {chatData.chat_messages.map((message: any, index: number) => {
                         const isUser = message.role === 'user';
-                        const textContent = (message.content as any[])?.find(p => p.text)?.text || '';
                         
                         return (
                             <div key={index} className={cn("flex items-start gap-4", isUser ? 'justify-end' : 'justify-start')}>
@@ -98,7 +96,7 @@ export default function AdminChatViewPage() {
                                     </Avatar>
                                 )}
                                 <div className={cn("max-w-2xl p-4 rounded-lg", isUser ? "bg-primary text-primary-foreground" : "bg-background")}>
-                                    <p className="whitespace-pre-wrap">{textContent}</p>
+                                    <p className="whitespace-pre-wrap">{message.content}</p>
                                 </div>
                                 {isUser && (
                                     <Avatar>
@@ -114,4 +112,3 @@ export default function AdminChatViewPage() {
         </AdminLayout>
     );
 }
-

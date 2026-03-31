@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -17,8 +19,7 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { LayoutDashboard, BookOpen, Compass, Share2 } from 'lucide-react';
-import { ChatWidget } from './chat-widget';
+import { LayoutDashboard, BookOpen, Compass, Share2, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import type { UserProfile } from '@/lib/types';
@@ -35,6 +36,7 @@ import { ScrollArea } from './ui/scroll-area';
 
 const mainNav = [
   { href: '/dashboard', icon: <LayoutDashboard />, label: 'Dashboard' },
+  { href: '/profile', icon: <User />, label: 'Profile & Progress' },
 ];
 
 const coursesNav = [
@@ -136,7 +138,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         <SidebarMenuItem key={item.href}>
                             <SidebarMenuButton
                             asChild
-                            isActive={pathname.startsWith(item.href)}
+                            isActive={pathname.startsWith(item.href) && (item.href !== '/courses' || pathname === '/courses')}
                             tooltip={{ children: item.label }}
                             >
                             <Link href={item.href}>
@@ -178,7 +180,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex-1 bg-card border rounded-xl p-4 md:p-6 lg:p-8 overflow-y-auto">
                 {children}
             </div>
-            <ChatWidget />
         </div>
       </div>
     </SidebarProvider>

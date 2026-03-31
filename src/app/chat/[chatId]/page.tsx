@@ -1,10 +1,10 @@
 
+'use server';
 
 import { getUserChats, getChat, getWebsiteSettings, getUserProfile } from '@/lib/supabase/queries';
-import { ChatClient } from '../chat-client';
+import { ChatClient } from '@/components/chat-client';
 import { notFound } from 'next/navigation';
-
-export const dynamic = 'force-dynamic';
+import type { Chat, ChatMessage } from '@/lib/types';
 
 export default async function SpecificChatPage({ params }: { params: { chatId: string }}) {
   const chats = await getUserChats();
@@ -15,13 +15,11 @@ export default async function SpecificChatPage({ params }: { params: { chatId: s
   if (!chat) {
     notFound();
   }
-
-  const activeChat = {
+  
+  const activeChat: Chat & { messages: ChatMessage[] } | null = chat ? {
     ...chat,
-    messages: messages || [],
-  };
+    messages: (messages as unknown as ChatMessage[]) || [],
+  } : null;
 
   return <ChatClient chats={chats || []} activeChat={activeChat} settings={settings} profile={profile} />;
 }
-
-    

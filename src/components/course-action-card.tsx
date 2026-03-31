@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import { useState, useEffect } from 'react';
@@ -34,6 +35,9 @@ import { giftCourseToUser, enrollInCourse } from '@/lib/supabase/actions';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useRouter } from 'next/navigation';
+import { useCourseInteractions } from '@/hooks/use-course-interactions';
+import { cn } from '@/lib/utils';
+
 
 function AuthRequiredDialog({ children, fullWidth = false }: { children: React.ReactNode, fullWidth?: boolean }) {
     return (
@@ -188,6 +192,9 @@ export function CourseActionCard({ course, user, isEnrolledInitial }: { course: 
     const router = useRouter();
     const [isEnrolled, setIsEnrolled] = useState(isEnrolledInitial);
     const [loading, setLoading] = useState(false);
+    
+    const { isWishlisted, toggleWishlist, isInCompare, toggleCompare } = useCourseInteractions(course.id);
+
 
     useEffect(() => {
         setIsEnrolled(isEnrolledInitial);
@@ -255,7 +262,9 @@ export function CourseActionCard({ course, user, isEnrolledInitial }: { course: 
             </div>
             <div className="flex items-center gap-2">
                 <Button size="lg" className="flex-1"><ShoppingCart className="mr-2"/> Add to Cart</Button>
-                <Button size="icon" variant="outline"><Heart /></Button>
+                <Button size="icon" variant="outline" onClick={() => toggleWishlist(course)}>
+                    <Heart className={cn("w-5 h-5", isWishlisted && "fill-red-500 text-red-500")} />
+                </Button>
             </div>
             <Button size="lg" variant="outline" className="w-full">Buy Now</Button>
         </div>
@@ -344,7 +353,9 @@ export function CourseActionCard({ course, user, isEnrolledInitial }: { course: 
                             </AuthRequiredDialog>
                         )}
 
-                        <Button variant="link" size="sm" className="text-muted-foreground"><GitCompareArrows className="mr-2 h-4 w-4" /> Compare</Button>
+                        <Button variant="link" size="sm" className="text-muted-foreground" onClick={() => toggleCompare(course)}>
+                            <GitCompareArrows className={cn("mr-2 h-4 w-4", isInCompare && "text-primary")} /> Compare
+                        </Button>
                     </div>
                 </div>
             </div>

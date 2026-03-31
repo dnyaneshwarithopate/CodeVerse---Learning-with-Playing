@@ -10,4 +10,4 @@ import '@/ai/flows/generate-code-task.ts';
 import '@/ai/flows/extract-video-insights.ts';
 import '@/ai/flows/generate-distractors.ts';
 import '@/ai/flows/chat.ts';
-import '@/ai/flows/explain-code-snippet.ts';
+import '@/ai/flows/analyze-chat-conversation.ts';

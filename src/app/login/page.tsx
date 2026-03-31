@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,19 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog"
-import { Pencil } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ResetPasswordDialog } from '@/components/reset-password-dialog';
 
 
 export default function LoginPage() {
@@ -29,17 +20,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      // Reset state when dialog is closed
-      setIsOtpSent(false);
-      setIsEditingEmail(false);
-    }
-  }
 
   const supabase = createClient();
 
@@ -59,9 +39,8 @@ export default function LoginPage() {
           description: error.message,
         });
       } else {
-         // Using router.replace is more robust for preview environments
-         // as it replaces the current history state, forcing a reload.
-         router.replace('/dashboard?toast=true');
+         // Force a router refresh to reload the layout and check auth state
+         router.refresh();
       }
     } catch (e: any) {
         toast({
@@ -72,29 +51,6 @@ export default function LoginPage() {
     } finally {
         setLoading(false);
     }
-  };
-  
-  const handleSendOtp = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}/auth/callback?next=/update-password`,
-    });
-
-    if (error) {
-       toast({
-        variant: "destructive",
-        title: "Error sending reset link",
-        description: error.message,
-      });
-    } else {
-      setIsOtpSent(true);
-      setIsEditingEmail(false);
-       toast({
-        title: "Password Reset Link Sent",
-        description: "Check your email for the password reset link.",
-      });
-    }
-    setLoading(false);
   };
 
   return (
@@ -129,54 +85,11 @@ export default function LoginPage() {
               <div className="grid gap-2">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <AlertDialog onOpenChange={handleOpenChange}>
-                      <AlertDialogTrigger asChild>
-                          <Button variant="link" className="ml-auto inline-block text-sm underline p-0 h-auto">
-                              Forgot your password?
-                          </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                          <AlertDialogHeader>
-                          <AlertDialogTitle>Reset Password</AlertDialogTitle>
-                          <AlertDialogDescription>
-                              {isOtpSent 
-                                  ? `A password reset link has been sent to your email.`
-                                  : "We'll send a link to your email to reset your password."
-                              }
-                          </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          
-                          <div className="space-y-4 my-4">
-                              <div className="flex items-center gap-2">
-                                  {isEditingEmail || !isOtpSent ? (
-                                      <Input 
-                                          type="email" 
-                                          value={email}
-                                          onChange={(e) => setEmail(e.target.value)}
-                                          className="bg-input"
-                                      />
-                                  ) : (
-                                      <p className="font-medium text-sm flex-1">{email}</p>
-                                  )}
-                                  {isOtpSent && (
-                                      <Button variant="ghost" size="icon" onClick={() => setIsEditingEmail(!isEditingEmail)}>
-                                          <Pencil className="w-4 h-4"/>
-                                      </Button>
-                                  )}
-                              </div>
-                          </div>
-
-                          <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <Button
-                                onClick={handleSendOtp}
-                                disabled={loading}
-                              >
-                                {loading ? 'Sending...' : 'Send Reset Link'}
-                              </Button>
-                          </AlertDialogFooter>
-                      </AlertDialogContent>
-                  </AlertDialog>
+                  <ResetPasswordDialog initialEmail={email}>
+                     <Button variant="link" className="ml-auto inline-block text-sm underline p-0 h-auto">
+                        Forgot your password?
+                    </Button>
+                  </ResetPasswordDialog>
                 </div>
                 <Input 
                   id="password" 

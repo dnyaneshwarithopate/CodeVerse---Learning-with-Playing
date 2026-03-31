@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -40,6 +41,38 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_analysis: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          summary: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_analysis_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: true
+            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
         ]
@@ -418,6 +451,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          last_played_at: string | null
           learning_at: string
           role: string
           streak: number
@@ -428,6 +462,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id: string
+          last_played_at?: string | null
           learning_at: string
           role?: string
           streak?: number
@@ -438,6 +473,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          last_played_at?: string | null
           learning_at?: string
           role?: string
           streak?: number
@@ -680,6 +716,7 @@ export type Database = {
           completed_level_id: string
           game_id: string
           id: number
+          is_perfect: boolean
           user_id: string
         }
         Insert: {
@@ -687,6 +724,7 @@ export type Database = {
           completed_level_id: string
           game_id: string
           id?: number
+          is_perfect?: boolean
           user_id: string
         }
         Update: {
@@ -694,6 +732,7 @@ export type Database = {
           completed_level_id?: string
           game_id?: string
           id?: number
+          is_perfect?: boolean
           user_id?: string
         }
         Relationships: [
@@ -850,6 +889,39 @@ export type Database = {
           },
         ]
       }
+      user_wishlist: {
+        Row: {
+          course_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_wishlist_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_wishlist_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       website_settings: {
         Row: {
           chat_bot_avatar_url: string | null
@@ -873,7 +945,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_xp: {
+        Args: {
+          user_id_in: string
+          xp_to_add: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
@@ -978,6 +1056,10 @@ export type Composites<
 > = PublicCompositeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeNameOrOptions["schema"]]["CompositeTypes"][CompositeName]
   : PublicCompositeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeNameOrOptions]
+    ? PublicSchema["CompositeTypes"][CompositeName]
     : never
-```
+    
+
+    
+    
+

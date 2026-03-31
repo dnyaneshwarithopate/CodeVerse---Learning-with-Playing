@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,7 +11,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 238 83% 66%;
     --primary-foreground: 222.2 47.4% 11.2%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -22,10 +23,18 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 91.2% 59.8%;
+    --ring: 238 83% 66%;
     --radius: 0.75rem;
 
-    /* New Game UI Theme Variables */
+    /* Syntax Highlighting Colors */
+    --code-keyword: 300 85% 75%; /* A bright, vibrant magenta for keywords */
+    --code-function: 160 80% 65%; /* A pleasant, readable teal for function names */
+    --code-string: 50 90% 70%;   /* A warm, noticeable gold for strings */
+    --code-number: 210 85% 75%;  /* A cool, light blue for numbers */
+    --code-comment: 220 15% 60%; /* A lighter gray for comments, improving contrast */
+    --code-punctuation: 210 20% 80%; /* A brighter, neutral white for punctuation */
+
+    /* Game UI Theme Variables */
     --game-bg: 30 54% 25%; /* Dark wood color */
     --game-surface: 30 52% 35%; /* Lighter wood panel */
     --game-border: 35 65% 45%; /* Wood border color */
@@ -41,12 +50,20 @@
 
     --sidebar-background: 222.2 84% 4.9%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary: 238 83% 66%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 238 83% 66%;
+
+    /* New Homepage Theme */
+    --hp-background: 240 10% 4%; /* zinc-950 */
+    --hp-background-deep: 240 10% 4%;
+    --hp-accent: 221 83% 53%; /* blue-600 */
+    --hp-accent-glow: 221 83% 63%;
+    --hp-text: 240 5% 95%; /* zinc-100 */
+    --hp-text-muted: 240 5% 63%; /* zinc-400 */
   }
 
   .light {
@@ -56,7 +73,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 238 83% 66%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -70,6 +87,9 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.75rem;
+
+    --hp-background: 0 0% 100%;
+    --hp-grid: 0 0% 95%;
   }
 }
 
@@ -79,31 +99,42 @@
   }
   body {
     @apply bg-background text-foreground;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-
-  body::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
   }
 
   /* For webkit browsers */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
+    background: hsl(var(--border));
     border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    background: hsl(var(--primary));
+  }
+  
+  .dark-grid-background {
+    position: absolute;
+    inset: 0;
+    z-index: -10;
+    background-color: hsl(var(--hp-background));
+    background-image:
+      linear-gradient(rgba(30, 58, 138, 0.5) 1px, transparent 1px),
+      linear-gradient(to right, rgba(30, 58, 138, 0.5) 1px, transparent 1px);
+    background-size: 3rem 3rem;
+    animation: pan-grid 30s linear infinite;
+  }
+  
+  @keyframes pan-grid {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 3rem 3rem; }
   }
 }
 
@@ -142,4 +173,53 @@
       @apply btn-game !py-1.5;
    }
 
+  .box {
+    animation: drop-and-fade var(--duration) var(--delay) infinite;
+  }
+  
+  @keyframes drop-and-fade {
+    0% {
+      transform: translateY(-100%) scale(0.5);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) scale(1.5);
+      opacity: 0;
+    }
+  }
+
+  .container-grid {
+    background: #000000;
+    --gap: 5em;
+    --line: 1px;
+    --color: rgba(255, 255, 255, 0.2);
+    background-image: linear-gradient(
+        -90deg,
+        transparent calc(var(--gap) - var(--line)),
+        var(--color) calc(var(--gap) - var(--line) + 1px),
+        var(--color) var(--gap)
+      ),
+      linear-gradient(
+        0deg,
+        transparent calc(var(--gap) - var(--line)),
+        var(--color) calc(var(--gap) - var(--line) + 1px),
+        var(--color) var(--gap)
+      );
+    background-size: var(--gap) var(--gap);
+    mask-image: linear-gradient(to bottom, white 50%, transparent 100%);
+  }
+
+}
+
+.line-clamp-2 {
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  overflow: hidden;
 }

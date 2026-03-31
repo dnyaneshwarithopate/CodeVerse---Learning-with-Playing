@@ -49,7 +49,7 @@ export default function SignupPage() {
           // Admins are assigned manually in Supabase.
           role: 'user', 
         },
-        emailRedirectTo: `${location.origin}/auth/callback?next=/u/welcome?toast=true`,
+        emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard/welcome`,
       },
     });
 
