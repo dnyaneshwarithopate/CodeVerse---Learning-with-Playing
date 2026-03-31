@@ -1,6 +1,6 @@
 {
   "name": "nextn",
-  "version": "16.2.1",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 9002",
@@ -49,12 +49,12 @@
     "firebase": "^11.9.1",
     "genkit": "^1.20.0",
     "lucide-react": "^0.475.0",
-    "next": "^15.2.0",
+    "next": "16.2.1",
     "patch-package": "^8.0.0",
-    "react": "^19.2.4",
+    "react": "^18.3.1",
     "react-confetti": "^6.1.0",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^19.2.4",
+    "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "react-resizable-panels": "^2.0.19",
     "recharts": "^2.15.1",
