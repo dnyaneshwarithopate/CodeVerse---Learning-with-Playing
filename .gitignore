@@ -4,11 +4,6 @@
 /node_modules
 /.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
 # testing
 /coverage
@@ -16,9 +11,7 @@
 # next.js
 /.next/
 /out/
-
-# production
-/build
+build/
 
 # misc
 .DS_Store
@@ -30,6 +23,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local env files (do NOT commit .env.local or raw .env, but .env.example is okay to commit)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # vercel
 .vercel
 
@@ -37,9 +37,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Optional: Genkit and Firebase
+.genkit/
 .genkit/*
-.env*
-
-# firebase
 firebase-debug.log
 firestore-debug.log
+.firebase/
